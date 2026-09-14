@@ -14,7 +14,7 @@ Selamat datang di repositori catatan dan dokumentasi praktikum **Pemrograman Vis
 | Informasi | Detail |
 | :--- | :--- |
 | **Nama Mahasiswa** | Fikri |
-| **Repositori Utama** | [FikriOrb/pemrograman-visual](https://github.com/FikriOrb/pemrograman-visual) |
+| **Repositori Utama** | [FikriYuzaki/pemrograman-visual](https://github.com/FikriYuzaki/pemrograman-visual) |
 | **Program Studi** | D3 Teknik Informatika |
 | **Fakultas / Kampus** | Vokasi / Universitas Sumatera Utara |
 | **Tahun Ajaran** | 2024 / 2025 |
@@ -42,6 +42,13 @@ Selamat datang di repositori catatan dan dokumentasi praktikum **Pemrograman Vis
   - [Implementasi Kode Program (`Form1.vb`)](#-implementasi-kode-program-pertemuan-3-form1vb)
   - [Penjelasan Logika Percabangan](#-penjelasan-logika-percabangan)
   - [Alur Pengujian Aplikasi Pertemuan 3](#-alur-pengujian-aplikasi-pertemuan-3)
+- [📗 Pertemuan 4 - Struktur Perulangan (Looping)](#-pertemuan-4---struktur-perulangan-looping)
+  - [Konsep Dasar Struktur Perulangan](#-konsep-dasar-struktur-perulangan)
+  - [Komponen Visual yang Digunakan](#-komponen-visual-yang-digunakan-pertemuan-4)
+  - [Validasi Input & KeyPress Event](#-validasi-input--keypress-event-pertemuan-4)
+  - [Implementasi Kode Program (`frmPerulangan.vb`)](#-implementasi-kode-program-frmperulanganvb)
+  - [Penjelasan Logika Perulangan For...Next & Step](#-penjelasan-logika-perulangan-fornext--step)
+  - [Alur Pengujian Aplikasi Pertemuan 4](#-alur-pengujian-aplikasi-pertemuan-4)
 
 ---
 
@@ -329,6 +336,153 @@ End Class
 4. **Uji Rentang 0 - 50**: Masukkan angka `45`, gambar animasi Tsukasa dance akan ditampilkan pada `PictureBox`.
 5. **Uji Rentang 51 - 70**: Masukkan angka `65`, gambar `img1.png` akan ditampilkan.
 6. **Uji Rentang 71 - 100**: Masukkan angka `90`, gambar `img2.png` akan ditampilkan.
+
+---
+
+# 📗 Pertemuan 4 - Struktur Perulangan (Looping)
+
+## 💡 Konsep Dasar Struktur Perulangan
+
+Dalam pemrograman, **struktur kendali perulangan (*looping / iteration*)** digunakan untuk mengeksekusi sekumpulan instruksi atau blok kode secara berulang-ulang berdasarkan kondisi tertentu atau rentang pencacah (*counter*) yang telah ditentukan.
+
+Pada Visual Basic .NET, beberapa struktur perulangan yang umum digunakan meliputi:
+1. **`For...Next`**: Digunakan ketika jumlah iterasi atau perulangan sudah diketahui secara pasti (berdasarkan nilai awal, nilai akhir, dan interval kenaikan/penurunan *step*).
+2. **`Do While / Do Until...Loop`**: Digunakan untuk perulangan dengan evaluasi kondisi di awal atau di akhir blok iterasi.
+3. **`While...End While`**: Digunakan untuk mengeksekusi blok kode selama kondisi bernilai benar (*True*).
+
+Pada praktikum Pertemuan 4 ini, fokus utama pembelajaran adalah penerapan **`For...Next` dengan interval `Step` negatif (perulangan mundur)** serta integrasi data visual dengan kontrol **`ListBox`**.
+
+---
+
+## 🛠️ Komponen Visual yang Digunakan (Pertemuan 4)
+
+Antarmuka form dirancang pada `frmPerulangan` menggunakan komponen-komponen Windows Forms berikut:
+
+| Komponen | Nama Variabel (*Name*) | Teks / Properti | Fungsi & Peran |
+| :--- | :--- | :--- | :--- |
+| **Label** | `lblNilaiAwal` | `Nilai Awal :` | Label penunjuk untuk input batas awal perulangan. |
+| **Label** | `lblNilaiAkhir` | `Nilai Akhir :` | Label penunjuk untuk input batas akhir perulangan. |
+| **TextBox** | `txtNilaiAwal` | *(kosong)* | Kotak input teks untuk menerima nilai awal perulangan. |
+| **TextBox** | `txtNilaiAkhir` | *(kosong)* | Kotak input teks untuk menerima nilai akhir perulangan. |
+| **Button** | `btnInput` | `Input` | Tombol untuk memicu validasi dan mengeksekusi algoritma perulangan. |
+| **ListBox** | `lstHasil` | *(kosong)* | Komponen daftar visual untuk menampilkan seluruh deret angka hasil iterasi. |
+
+---
+
+## 🛡️ Validasi Input & KeyPress Event (Pertemuan 4)
+
+Sebelum perulangan diproses, program menerapkan dua lapis validasi untuk menjaga keabsahan data:
+
+1. **Pencegahan Karakter Non-Angka (`KeyPress`)**:
+   - Event `KeyPress` pada `txtNilaiAwal` dan `txtNilaiAkhir` memeriksa setiap tombol yang ditekan. Karakter selain digit angka atau tombol kontrol (seperti *Backspace*) akan diabaikan (`e.Handled = True`).
+   ```vb
+   If Not Char.IsControl(e.KeyChar) AndAlso Not Char.IsDigit(e.KeyChar) Then
+       e.Handled = True
+   End If
+   ```
+
+2. **Validasi Parsing Numerik (`Integer.TryParse`)**:
+   - Memastikan teks yang dimasukkan dapat dikonversi ke tipe bilangan bulat (`Integer`).
+   - Apabila input kosong atau tidak valid, program menampilkan kotak dialog peringatan `"Masukkan dalam bentuk angka"`, mengarahkan fokus ke kontrol terkait dengan `.Focus()`, lalu menghentikan prosedur menggunakan perintah `Return`.
+
+---
+
+## 💻 Implementasi Kode Program (`frmPerulangan.vb`)
+
+Berikut adalah kode sumber lengkap yang diimplementasikan pada `frmPerulangan.vb`:
+
+```vb
+Public Class frmPerulangan
+    Private Sub txtNilaiAwal_KeyPress(sender As Object, e As KeyPressEventArgs) Handles txtNilaiAwal.KeyPress
+        If Not Char.IsControl(e.KeyChar) AndAlso Not Char.IsDigit(e.KeyChar) Then
+            e.Handled = True
+        End If
+    End Sub
+
+    Private Sub txtNilaiAkhir_KeyPress(sender As Object, e As KeyPressEventArgs) Handles txtNilaiAkhir.KeyPress
+        If Not Char.IsControl(e.KeyChar) AndAlso Not Char.IsDigit(e.KeyChar) Then
+            e.Handled = True
+        End If
+    End Sub
+
+    Private Sub btnInput_Click(sender As Object, e As EventArgs) Handles btnInput.Click
+        Dim nilaiAwal As Integer
+        Dim nilaiAkhir As Integer
+
+        If Not Integer.TryParse(txtNilaiAwal.Text, nilaiAwal) Then
+            MessageBox.Show("Masukkan dalam bentuk angka")
+            txtNilaiAwal.Focus()
+            Return
+        End If
+
+        If Not Integer.TryParse(txtNilaiAkhir.Text, nilaiAkhir) Then
+            MessageBox.Show("Masukkan dalam bentuk angka")
+            txtNilaiAkhir.Focus()
+            Return
+        End If
+
+        lstHasil.Items.Clear()
+
+        For i As Integer = nilaiAwal To nilaiAkhir Step -2
+            lstHasil.Items.Add(i)
+        Next
+
+    End Sub
+
+End Class
+```
+
+---
+
+## 🔍 Penjelasan Logika Perulangan For...Next & Step
+
+### 1. Mengosongkan ListBox (`lstHasil.Items.Clear()`)
+```vb
+lstHasil.Items.Clear()
+```
+Sebelum memulai perulangan baru, method `.Clear()` pada koleksi `Items` dipanggil. Tujuannya adalah menghapus hasil perhitungan sebelumnya agar data pada `ListBox` tidak menumpuk saat tombol **Input** diklik berulang kali.
+
+### 2. Struktur `For...Next` dengan `Step` Negatif
+```vb
+For i As Integer = nilaiAwal To nilaiAkhir Step -2
+    lstHasil.Items.Add(i)
+Next
+```
+* **`For i As Integer = nilaiAwal`**: Mendeklarasikan variabel pencacah iterasi `i` bertipe data `Integer` yang dimulai dari nilai `nilaiAwal`.
+* **`To nilaiAkhir`**: Menentukan batas akhir perulangan.
+* **`Step -2`**: Menentukan interval perubahan nilai pencacah di setiap siklus:
+  - Tanpa parameter `Step`, nilai pencacah bertambah `+1` secara default (*increment*).
+  - Dengan `Step -2`, nilai pencacah akan berkurang 2 di setiap putaran iterasi (*decrementing loop*).
+  - **Contoh Kasus**: Jika `nilaiAwal = 20` dan `nilaiAkhir = 10`, maka urutan nilai `i` yang dihasilkan adalah:
+    $$\text{20, 18, 16, 14, 12, 10}$$
+* **`lstHasil.Items.Add(i)`**: Menambahkan nilai variabel `i` saat iterasi berjalan ke dalam daftar tampilan komponen `ListBox`.
+* **`Next`**: Melanjutkan ke iterasi perulangan berikutnya atau keluar jika kondisi batas akhir telah terlampaui.
+
+---
+
+## 🚀 Alur Pengujian Aplikasi Pertemuan 4
+
+1. **Jalankan Aplikasi**: Tekan `F5` atau klik tombol **Start** pada Visual Studio.
+2. **Uji Validasi Input Teks**:
+   - Coba ketikkan huruf atau simbol pada kotak `Nilai Awal` atau `Nilai Akhir`. Sistem akan menolak karakter selain angka secara otomatis.
+3. **Uji Validasi Input Kosong**:
+   - Biarkan salah satu kotak teks kosong lalu klik tombol **Input**. Muncul kotak dialog peringatan: `"Masukkan dalam bentuk angka"`.
+4. **Uji Perulangan Mundur (Step -2)**:
+   - Masukkan `Nilai Awal: 20`
+   - Masukkan `Nilai Akhir: 10`
+   - Klik tombol **Input**.
+   - Pada komponen `lstHasil` (ListBox) akan muncul deret angka menurun:
+     ```text
+     20
+     18
+     16
+     14
+     12
+     10
+     ```
+5. **Uji Reset / Pembersihan ListBox**:
+   - Ubah nilai input, misalnya `Nilai Awal: 14` dan `Nilai Akhir: 4`.
+   - Klik tombol **Input**, amati bahwa data lama (20 s/d 10) dibersihkan secara otomatis dan digantikan oleh deret angka baru (14, 12, 10, 8, 6, 4).
 
 ---
 
