@@ -49,6 +49,13 @@ Selamat datang di repositori catatan dan dokumentasi praktikum **Pemrograman Vis
   - [Implementasi Kode Program (`frmPerulangan.vb`)](#-implementasi-kode-program-frmperulanganvb)
   - [Penjelasan Logika Perulangan For...Next & Step](#-penjelasan-logika-perulangan-fornext--step)
   - [Alur Pengujian Aplikasi Pertemuan 4](#-alur-pengujian-aplikasi-pertemuan-4)
+- [📒 Pertemuan 5 - Array dan Modul (Module)](#-pertemuan-5---array-dan-modul-module)
+  - [Konsep Dasar Module, Sub, dan Function](#-konsep-dasar-module-sub-dan-function)
+  - [Konsep Array 1 Dimensi & 2 Dimensi](#-konsep-array-1-dimensi--2-dimensi)
+  - [Komponen Visual yang Digunakan](#-komponen-visual-yang-digunakan-pertemuan-5)
+  - [Implementasi Kode Program](#-implementasi-kode-program-pertemuan-5)
+  - [Penjelasan Logika & Pemanggilan Data](#-penjelasan-logika--pemanggilan-data)
+  - [Alur Pengujian Aplikasi Pertemuan 5](#-alur-pengujian-aplikasi-pertemuan-5)
 
 ---
 
@@ -483,6 +490,179 @@ Next
 5. **Uji Reset / Pembersihan ListBox**:
    - Ubah nilai input, misalnya `Nilai Awal: 14` dan `Nilai Akhir: 4`.
    - Klik tombol **Input**, amati bahwa data lama (20 s/d 10) dibersihkan secara otomatis dan digantikan oleh deret angka baru (14, 12, 10, 8, 6, 4).
+
+---
+
+# 📒 Pertemuan 5 - Array dan Modul (Module)
+
+## 💡 Konsep Dasar Module, Sub, dan Function
+
+Pada pertemuan ini, dipelajari mengenai modularisasi program menggunakan **Module** serta implementasi **Sub** dan **Function** di Visual Basic .NET:
+
+1. **Module (`Module ... End Module`)**  
+   File kode terpisah yang berfungsi sebagai kontainer untuk mendefinisikan variabel global, konstanta, fungsi, dan prosedur. Semua elemen yang dideklarasikan dengan akses `Public` di dalam Module dapat diakses secara langsung dari form mana pun di dalam proyek tanpa memerlukan proses instansiasi objek (`New`).
+
+2. **Sub (Subroutine / Prosedur)**  
+   Blok kode instruksi yang menjalankan serangkaian aksi atau perintah tertentu **tanpa menghasilkan nilai kembalian (*return value*)**.
+   Contoh pada `ModArray1.vb`:
+   ```vb
+   Public Sub TampilkanPesan(nama As String)
+       MessageBox.Show("Halo" & nama)
+   End Sub
+   ```
+
+3. **Function (Fungsi)**  
+   Blok kode prosedur yang memproses data masukan (parameter) dan **mengembalikan suatu nilai (*return value*)** dengan tipe data tertentu ke pemanggilnya menggunakan kata kunci `Return`.
+   Contoh fungsi kalkulasi bersyarat pada `ModArray1.vb`:
+   ```vb
+   Function hitung(panjang As Integer, lebar As Integer) As Integer
+       If panjang > 50 Then
+           Return panjang * lebar            ' Menghitung Luas jika panjang > 50
+       Else
+           Return 2 * panjang + 2 * lebar    ' Menghitung Keliling jika panjang <= 50
+       End If
+   End Function
+   ```
+
+---
+
+## 🗃️ Konsep Array 1 Dimensi & 2 Dimensi
+
+**Array** adalah struktur data terstruktur yang digunakan untuk menyimpan kumpulan nilai dengan tipe data yang sama dalam satu variabel referensi. Setiap elemen diakses melalui indeks berbasis nol (*zero-based index*).
+
+### 1. Array Satu Dimensi (1D Array)
+Struktur data berderet linear satu baris nilai.
+```vb
+Public nilai() As Integer = {50, 60, 70, 80, 90, 100}
+```
+* **Banyak Elemen**: 6 elemen (diperoleh dengan properti `.Length`).
+* **Rentang Indeks**: `0` hingga `nilai.Length - 1` (yaitu `0` sampai `5`).
+* **Akses Elemen**: `nilai(0) = 50`, `nilai(1) = 60`, `nilai(5) = 100`.
+
+### 2. Array Dua Dimensi (2D Array / Matriks)
+Struktur data berbentuk tabel berdimensi ganda yang memiliki baris dan kolom `(baris, kolom)`.
+```vb
+Public nilai2d(,) As Integer = {
+    {55, 53, 65},
+    {70, 72, 78},
+    {80, 85, 90}
+}
+```
+
+Tabel visualisasi representasi indeks matriks `nilai2d`:
+
+| Baris \ Kolom | Kolom 0 (`Index 0`) | Kolom 1 (`Index 1`) | Kolom 2 (`Index 2`) |
+| :--- | :---: | :---: | :---: |
+| **Baris 0 (`Index 0`)** | `55` | `53` | `65` |
+| **Baris 1 (`Index 1`)** | `70` | `72` | **`78`** |
+| **Baris 2 (`Index 2`)** | `80` | `85` | `90` |
+
+* Akses elemen `nilai2d(1, 2)` merujuk ke elemen pada **Baris indeks 1** dan **Kolom indeks 2**, yaitu bernilai **`78`**.
+
+---
+
+## 🛠️ Komponen Visual yang Digunakan (Pertemuan 5)
+
+Antarmuka form dirancang pada `FrmArray` menggunakan kontrol-kontrol Windows Forms berikut:
+
+| Komponen | Nama Variabel (*Name*) | Teks / Label | Fungsi & Peran |
+| :--- | :--- | :--- | :--- |
+| **Label** | `lblPanjang` | `Panjang :` | Keterangan teks untuk kotak input panjang. |
+| **TextBox** | `txtPanjang` | *(kosong)* | Kotak input teks untuk memasukkan nilai dimensi panjang. |
+| **Label** | `lblLebar` | `Lebar :` | Keterangan teks untuk kotak input lebar. |
+| **TextBox** | `txtLebar` | *(kosong)* | Kotak input teks untuk memasukkan nilai dimensi lebar. |
+| **Button** | `btnTampil` | `Tampilkan` | Tombol pemicu untuk mengeksekusi fungsi atau menampilkan data array. |
+| **ListBox** | `lsbArray` | *(kosong)* | Komponen daftar (*list*) untuk menampung dan menampilkan kumpulan elemen array. |
+
+---
+
+## 💻 Implementasi Kode Program (Pertemuan 5)
+
+### 1. Berkas Modul (`ModArray1.vb`)
+```vb
+Module ModArray1
+    Public Sub TampilkanPesan(nama As String)
+        MessageBox.Show("Halo" & nama)
+    End Sub
+
+    Function hitung(panjang As Integer, lebar As Integer) As Integer
+        If panjang > 50 Then
+            Return panjang * lebar
+        Else
+            Return 2 * panjang + 2 * lebar
+        End If
+    End Function
+
+    Public nilai() As Integer = {50, 60, 70, 80, 90, 100}
+    Public nilai2d(,) As Integer = {
+        {55, 53, 65},
+        {70, 72, 78},
+        {80, 85, 90}
+    }
+End Module
+```
+
+### 2. Berkas Form (`FrmArray.vb`)
+```vb
+Public Class FrmArray
+    Private Sub btnTampil_Click(sender As Object, e As EventArgs) Handles btnTampil.Click
+        ' Opsi 1: Memanggil fungsi hitung dari modul dengan parameter input TextBox
+        ' MessageBox.Show("Hasilnya adalah " & hitung(txtPanjang.Text, txtLebar.Text))
+
+        ' Opsi 2: Menampilkan elemen indeks ke-1 dari array 1D
+        ' MessageBox.Show(nilai(1))
+
+        ' Opsi 3: Melakukan iterasi dan menampilkan seluruh elemen array 1D ke ListBox
+        ' For i As Integer = 0 To nilai.Length - 1
+        '     lsbArray.Items.Add(nilai(i))
+        ' Next
+
+        ' Opsi 4: Menampilkan elemen array 2 dimensi (baris 1, kolom 2)
+        MessageBox.Show(nilai2d(1, 2))
+    End Sub
+
+End Class
+```
+
+---
+
+## 🔍 Penjelasan Logika & Pemanggilan Data
+
+### 1. Pemanggilan Prosedur & Fungsi Modul
+* Karena `ModArray1` bersifat publik di dalam project, prosedur `TampilkanPesan(" Nama")` maupun fungsi `hitung(p, l)` dapat langsung dipanggil tanpa instansiasi objek.
+* Pada fungsi `hitung`:
+  - Jika nilai `panjang > 50`, dieksekusi rumus luas: `panjang * lebar`.
+  - Jika nilai `panjang <= 50`, dieksekusi rumus keliling: `2 * panjang + 2 * lebar`.
+
+### 2. Iterasi Menampilkan Array ke ListBox
+```vb
+For i As Integer = 0 To nilai.Length - 1
+    lsbArray.Items.Add(nilai(i))
+Next
+```
+* Perulangan dimulai dari indeks awal `0` hingga batas atas indeks `nilai.Length - 1` (yaitu `5`).
+* Pada setiap perputaran, instruksi `lsbArray.Items.Add(nilai(i))` menambahkan satu per satu angka (`50, 60, 70, 80, 90, 100`) ke dalam kontrol `ListBox`.
+
+### 3. Akses Elemen Array Multidimensi
+```vb
+MessageBox.Show(nilai2d(1, 2))
+```
+* Mengakses koordinat matriks baris indeks ke-1 dan kolom indeks ke-2 pada array `nilai2d`, menghasilkan nilai dialog teks `78`.
+
+---
+
+## 🚀 Alur Pengujian Aplikasi Pertemuan 5
+
+1. **Jalankan Aplikasi**: Tekan `F5` atau tombol **Start** pada Visual Studio.
+2. **Uji Array 2 Dimensi (Default)**:
+   - Klik tombol **Tampilkan**.
+   - Muncul kotak dialog `MessageBox` dengan teks **`78`**, yang membuktikan elemen matriks `nilai2d(1, 2)` terbaca dengan tepat dari modul.
+3. **Uji Penampilan Seluruh Array ke ListBox** *(saat loop diaktifkan)*:
+   - Aktifkan blok perulangan `For...Next` pada `FrmArray.vb` dan klik tombol **Tampilkan**.
+   - Komponen `lsbArray` akan terisi deret angka: `50`, `60`, `70`, `80`, `90`, `100`.
+4. **Uji Fungsi Bersyarat `hitung`** *(saat baris pemanggilan fungsi diaktifkan)*:
+   - Masukkan `Panjang: 60`, `Lebar: 10` $\rightarrow$ Karena panjang > 50, muncul pesan hasil: `"Hasilnya adalah 600"`.
+   - Masukkan `Panjang: 30`, `Lebar: 10` $\rightarrow$ Karena panjang $\le$ 50, muncul pesan hasil keliling: `"Hasilnya adalah 80"`.
 
 ---
 
