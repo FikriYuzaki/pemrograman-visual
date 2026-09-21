@@ -6,7 +6,7 @@
         'lsbArray.Items.Add(nilai(i))
         'Next
 
-        MessageBox.Show(nilai2d(1, 2))
+        MessageBox.Show("Nilai :" & nilai2d(1, 2))
     End Sub
 
 

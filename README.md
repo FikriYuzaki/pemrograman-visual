@@ -618,7 +618,7 @@ Public Class FrmArray
         ' Next
 
         ' Opsi 4: Menampilkan elemen array 2 dimensi (baris 1, kolom 2)
-        MessageBox.Show(nilai2d(1, 2))
+        MessageBox.Show("Nilai :" & nilai2d(1, 2))
     End Sub
 
 End Class
@@ -645,9 +645,9 @@ Next
 
 ### 3. Akses Elemen Array Multidimensi
 ```vb
-MessageBox.Show(nilai2d(1, 2))
+MessageBox.Show("Nilai :" & nilai2d(1, 2))
 ```
-* Mengakses koordinat matriks baris indeks ke-1 dan kolom indeks ke-2 pada array `nilai2d`, menghasilkan nilai dialog teks `78`.
+* Mengakses koordinat matriks baris indeks ke-1 dan kolom indeks ke-2 pada array `nilai2d`, menghasilkan pesan dialog teks `"Nilai :78"`.
 
 ---
 
@@ -656,7 +656,7 @@ MessageBox.Show(nilai2d(1, 2))
 1. **Jalankan Aplikasi**: Tekan `F5` atau tombol **Start** pada Visual Studio.
 2. **Uji Array 2 Dimensi (Default)**:
    - Klik tombol **Tampilkan**.
-   - Muncul kotak dialog `MessageBox` dengan teks **`78`**, yang membuktikan elemen matriks `nilai2d(1, 2)` terbaca dengan tepat dari modul.
+   - Muncul kotak dialog `MessageBox` dengan teks **`Nilai :78`**, yang membuktikan elemen matriks `nilai2d(1, 2)` terbaca dengan tepat dari modul.
 3. **Uji Penampilan Seluruh Array ke ListBox** *(saat loop diaktifkan)*:
    - Aktifkan blok perulangan `For...Next` pada `FrmArray.vb` dan klik tombol **Tampilkan**.
    - Komponen `lsbArray` akan terisi deret angka: `50`, `60`, `70`, `80`, `90`, `100`.
