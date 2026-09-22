@@ -56,6 +56,13 @@ Selamat datang di repositori catatan dan dokumentasi praktikum **Pemrograman Vis
   - [Implementasi Kode Program](#-implementasi-kode-program-pertemuan-5)
   - [Penjelasan Logika & Pemanggilan Data](#-penjelasan-logika--pemanggilan-data)
   - [Alur Pengujian Aplikasi Pertemuan 5](#-alur-pengujian-aplikasi-pertemuan-5)
+- [🗄️ Pertemuan 6 - Koneksi Database PostgreSQL (Supabase) & CRUD Dasar](#️-pertemuan-6---koneksi-database-postgresql-supabase--crud-dasar)
+  - [Konsep Arsitektur Modular Database](#-konsep-arsitektur-modular-database)
+  - [Manajemen Konfigurasi & Keamanan Kredensial](#-manajemen-konfigurasi--keamanan-kredensial)
+  - [Komponen Visual yang Digunakan](#-komponen-visual-yang-digunakan-pertemuan-6)
+  - [Implementasi Kode Program](#-implementasi-kode-program-pertemuan-6)
+  - [Penjelasan Alur Kerja Query & Eksekusi Data](#-penjelasan-alur-kerja-query--eksekusi-data)
+  - [Alur Pengujian Aplikasi Pertemuan 6](#-alur-pengujian-aplikasi-pertemuan-6)
 
 ---
 
@@ -663,6 +670,234 @@ MessageBox.Show("Nilai :" & nilai2d(1, 2))
 4. **Uji Fungsi Bersyarat `hitung`** *(saat baris pemanggilan fungsi diaktifkan)*:
    - Masukkan `Panjang: 60`, `Lebar: 10` $\rightarrow$ Karena panjang > 50, muncul pesan hasil: `"Hasilnya adalah 600"`.
    - Masukkan `Panjang: 30`, `Lebar: 10` $\rightarrow$ Karena panjang $\le$ 50, muncul pesan hasil keliling: `"Hasilnya adalah 80"`.
+
+---
+
+# 🗄️ Pertemuan 6 - Koneksi Database PostgreSQL (Supabase) & CRUD Dasar
+
+## 💡 Konsep Arsitektur Modular Database
+
+Pada praktikum **Pertemuan 6**, dipelajari cara menghubungkan aplikasi Windows Forms VB.NET dengan database relasional berbasis cloud (**PostgreSQL di Supabase**) menggunakan pustaka (*library*) **Npgsql** serta pola pemisahan tanggung jawab (*Separation of Concerns*) melalui struktur multi-modul:
+
+1. **`ModDatabase.vb` (Konfigurasi & Koneksi Dasar)**  
+   Bertanggung jawab membaca berkas konfigurasi `appsettings.json` secara dinamis dan menyediakan koneksi (*connection string*) ke database.
+2. **`ModFunction.vb` (Data Access Layer / Helper Eksekusi)**  
+   Menyediakan fungsi umum (*generic database helper*) untuk mengeksekusi perintah SQL non-query (`EksekusiData`) dan membaca data ke dalam `DataTable` (`AmbilData`).
+3. **`ModQuery.vb` (Business Query Layer)**  
+   Menyimpan logika dan sintaks kueri SQL spesifik entitas, seperti penambahan data (`TambahData`) dan pengambilan data tabel (`TampilkanData`).
+4. **`Form1.vb` (User Interface Layer)**  
+   Menangani interaksi pengguna, validasi input form, serta menampilkan data pada komponen `DataGridView`.
+
+---
+
+## 🔐 Manajemen Konfigurasi & Keamanan Kredensial
+
+Untuk menjaga keamanan kredensial dan kata sandi database (*password*) agar tidak bocor ke repositori publik (GitHub):
+
+1. **File `appsettings.json` (Lokal & Terlindungi)**  
+   Menyimpan connection string aktual beserta password Supabase. Berkas ini dimasukkan ke dalam `.gitignore` sehingga **tidak akan pernah terunggah atau ter-commit ke Git**.
+2. **File `appsettings.example.json` (Template Publik)**  
+   Disediakan sebagai berkas contoh bagi pengembang lain dengan parameter placeholder:
+   ```json
+   {
+     "ConnectionStrings": {
+       "DefaultConnection": "Host=YOUR_SUPABASE_HOST.pooler.supabase.com;Port=5432;Database=postgres;Username=YOUR_USERNAME;Password=YOUR_PASSWORD;SSL Mode=Require;Trust Server Certificate=true"
+     }
+   }
+   ```
+3. **Konfigurasi Proyek (`Pertemuan6.vbproj`)**  
+   Pengaturan `CopyToOutputDirectory` diset ke `PreserveNewest` agar file konfigurasi disalin otomatis ke folder keluaran kompilasi (`bin/Debug/` atau `bin/Release/`).
+
+---
+
+## 🛠️ Komponen Visual yang Digunakan (Pertemuan 6)
+
+Antarmuka form dirancang pada `Form1` menggunakan kontrol-kontrol Windows Forms berikut:
+
+| Komponen | Nama Variabel (*Name*) | Teks / Properti | Fungsi & Peran |
+| :--- | :--- | :--- | :--- |
+| **DataGridView** | `dgvMahasiswa` | *(Tabel Grid)* | Menampilkan kumpulan rekod data tabel mahasiswa dari database. |
+| **Button** | `btnTampilkan` | `Tampilkan` | Memicu pengambilan data dari database dan mengisi `dgvMahasiswa`. |
+| **TextBox** | `txtNim` | *(kosong)* | Kotak input teks untuk Nomor Induk Mahasiswa (NIM). |
+| **TextBox** | `txtNama` | *(kosong)* | Kotak input teks untuk Nama Mahasiswa. |
+| **TextBox** | `txtJurusan` | *(kosong)* | Kotak input teks untuk Program Studi / Jurusan. |
+| **Label** | `lblNim`, `lblNama`, `lblJurusan` | `NIM`, `Nama`, `Jurusan` | Petunjuk label teks untuk masing-masing field input. |
+| **Button** | `btnTambah` | `Tambah` | Tombol untuk menyimpan data mahasiswa baru ke database. |
+
+---
+
+## 💻 Implementasi Kode Program (Pertemuan 6)
+
+### 1. Modul Koneksi Database (`ModDatabase.vb`)
+```vb
+Imports Microsoft.Extensions.Configuration
+Imports Npgsql
+
+Module ModDatabase
+    Public Function GetConnectionString() As String
+        Dim config As IConfiguration =
+            New ConfigurationBuilder() _
+            .SetBasePath(AppContext.BaseDirectory) _
+            .AddJsonFile("appsettings.json", optional:=False, reloadOnChange:=True) _
+            .Build()
+
+        Return config.GetConnectionString("DefaultConnection")
+    End Function
+
+    Public Sub DatabaseKoneksi()
+        Try
+            Using conn As New NpgsqlConnection(GetConnectionString)
+                conn.Open()
+                MessageBox.Show("Koneksi database berhasil")
+            End Using
+        Catch ex As Exception
+            MessageBox.Show("Koneksi database gagal" & vbCrLf & ex.Message & "database")
+        End Try
+    End Sub
+End Module
+```
+
+### 2. Modul Eksekusi Data (`ModFunction.vb`)
+```vb
+Imports Npgsql
+Imports System.Data
+
+Module ModFunction
+    Public Function AmbilData(query As String) As DataTable
+        Dim dt As New DataTable
+
+        Try
+            Using conn As New NpgsqlConnection(ModDatabase.GetConnectionString())
+                conn.Open()
+                Using cmd As New NpgsqlCommand(query, conn)
+                    Using adapter As New NpgsqlDataAdapter(cmd)
+                        adapter.Fill(dt)
+                    End Using
+                End Using
+            End Using
+        Catch ex As Exception
+            MessageBox.Show("Gagal mengambil data" & vbCrLf & ex.Message, " database")
+        End Try
+
+        Return dt
+    End Function
+
+    Public Function EksekusiData(query As String, parameters As Dictionary(Of String, Object)) As Boolean
+        Try
+            Using conn As New NpgsqlConnection(ModDatabase.GetConnectionString())
+                conn.Open()
+                Using cmd As New NpgsqlCommand(query, conn)
+                    For Each parameter In parameters
+                        cmd.Parameters.AddWithValue(parameter.Key, parameter.Value)
+                    Next
+                    cmd.ExecuteNonQuery()
+                    Return True
+                End Using
+            End Using
+        Catch ex As Exception
+            MessageBox.Show("Gagal mengeksekusi data:" & vbCrLf & ex.Message, "Error Database")
+            Return False
+        End Try
+    End Function
+End Module
+```
+
+### 3. Modul Kueri Entitas Mahasiswa (`ModQuery.vb`)
+```vb
+Imports System.Data
+
+Module ModQuery
+    Public Function TambahData(nim As String, nama As String, jurusan As String) As Boolean
+        Dim query As String =
+            "INSERT INTO mahasiswa (nim, nama, jurusan) " &
+            "VALUES (@nim, @nama, @jurusan)"
+
+        Dim parameters As New Dictionary(Of String, Object) From {
+            {"@nim", nim},
+            {"@nama", nama},
+            {"@jurusan", jurusan}
+        }
+        Return ModFunction.EksekusiData(query, parameters)
+    End Function
+
+    Public Function TampilkanData() As DataTable
+        Return ModFunction.AmbilData("SELECT * FROM mahasiswa ORDER BY id ASC")
+    End Function
+End Module
+```
+
+### 4. Kode Form Antarmuka (`Form1.vb`)
+```vb
+Public Class Form1
+    Private Sub btnTampilkan_Click(sender As Object, e As EventArgs) Handles btnTampilkan.Click
+        dgvMahasiswa.AutoGenerateColumns = True
+        dgvMahasiswa.DataSource = ModQuery.TampilkanData()
+    End Sub
+
+    Private Sub btnTambah_Click(sender As Object, e As EventArgs) Handles btnTambah.Click
+        If ModQuery.TambahData(txtNim.Text, txtNama.Text, txtJurusan.Text) Then
+            MessageBox.Show("Data berhasil disimpan")
+        End If
+        txtJurusan.Clear()
+        txtNama.Clear()
+        txtNim.Clear()
+    End Sub
+
+    Private Sub txtNim_KeyPress(sender As Object, e As KeyPressEventArgs) Handles txtNim.KeyPress
+        If Not Char.IsDigit(e.KeyChar) AndAlso Not Char.IsControl(e.KeyChar) Then
+            e.Handled = True
+        End If
+    End Sub
+End Class
+```
+
+---
+
+## 🔍 Penjelasan Alur Kerja Query & Eksekusi Data
+
+### 1. Keamanan Query dengan Parameterized SQL
+Pada `ModQuery.TambahData`, query `INSERT` tidak menggabungkan teks langsung secara rentan (*string concatenation*), melainkan menggunakan parameter `@nim`, `@nama`, dan `@jurusan`:
+```vb
+cmd.Parameters.AddWithValue(parameter.Key, parameter.Value)
+```
+Metode ini secara otomatis memitigasi celah keamanan berbahaya **SQL Injection**.
+
+### 2. Pengelolaan Sumber Daya dengan Blok `Using`
+Semua objek koneksi (`NpgsqlConnection`), perintah (`NpgsqlCommand`), dan adapter (`NpgsqlDataAdapter`) dibungkus dalam blok `Using ... End Using`. Hal ini menjamin koneksi database selalu ditutup dan dibebaskan dari memori (*disposed*) secara otomatis meskipun terjadi kesalahan (*exception*).
+
+### 3. Validasi Karakter pada Form Input
+Event `txtNim_KeyPress` memastikan hanya karakter numerik yang dapat diketik pada input NIM:
+```vb
+If Not Char.IsDigit(e.KeyChar) AndAlso Not Char.IsControl(e.KeyChar) Then
+    e.Handled = True
+End If
+```
+
+---
+
+## 🚀 Alur Pengujian Aplikasi Pertemuan 6
+
+1. **Persiapan Database**:
+   - Pastikan tabel `mahasiswa` sudah dibuat pada Supabase PostgreSQL:
+     ```sql
+     CREATE TABLE mahasiswa (
+         id SERIAL PRIMARY KEY,
+         nim VARCHAR(20) NOT NULL,
+         nama VARCHAR(100) NOT NULL,
+         jurusan VARCHAR(100) NOT NULL
+     );
+     ```
+2. **Jalankan Aplikasi**: Tekan `F5` pada Visual Studio.
+3. **Uji Pengambilan Data (`Tampilkan`)**:
+   - Klik tombol **Tampilkan**.
+   - `dgvMahasiswa` akan menampilkan seluruh baris data dari database Supabase secara otomatis.
+4. **Uji Validasi Input NIM**:
+   - Ketik huruf pada input `NIM`; karakter huruf akan ditolak otomatis oleh sistem.
+5. **Uji Tambah Data Baru**:
+   - Isikan `NIM: 231401001`, `Nama: Budi`, `Jurusan: Teknologi Informasi`.
+   - Klik tombol **Tambah**.
+   - Muncul dialog konfirmasi: `"Data berhasil disimpan"`, dan seluruh kotak input dibersihkan secara otomatis.
+   - Klik tombol **Tampilkan** untuk memverifikasi data baru telah masuk ke dalam `DataGridView`.
 
 ---
 
