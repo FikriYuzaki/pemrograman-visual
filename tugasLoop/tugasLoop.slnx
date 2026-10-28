@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="Program1_ForNext/Program1_ForNext.vbproj" />
+  <Project Path="Program2_DoWhile/Program2_DoWhile.vbproj" />
+  <Project Path="tugasLoop/tugasLoop.vbproj" />
+</Solution>

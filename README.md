@@ -63,6 +63,24 @@ Selamat datang di repositori catatan dan dokumentasi praktikum **Pemrograman Vis
   - [Implementasi Kode Program](#-implementasi-kode-program-pertemuan-6)
   - [Penjelasan Alur Kerja Query & Eksekusi Data](#-penjelasan-alur-kerja-query--eksekusi-data)
   - [Alur Pengujian Aplikasi Pertemuan 6](#-alur-pengujian-aplikasi-pertemuan-6)
+- [🛡️ Pertemuan 7 - Validasi Input, Error Handling & Naming Convention](#️-pertemuan-7---validasi-input-error-handling--naming-convention)
+  - [Konsep Validasi Input & Defensive Programming](#-konsep-validasi-input--defensive-programming)
+  - [Komparasi Metode Konversi Tipe Data & Exception Handling](#-komparasi-metode-konversi-tipe-data--exception-handling)
+  - [Komponen Visual yang Digunakan (Pertemuan 7)](#-komponen-visual-yang-digunakan-pertemuan-7)
+  - [Implementasi Kode Program Pertemuan 7](#-implementasi-kode-program-pertemuan-7)
+  - [Penjelasan Logika Validasi & Ekspor CSV](#-penjelasan-logika-validasi--ekspor-csv)
+  - [Alur & Hasil Pengujian Aplikasi Pertemuan 7](#-alur--hasil-pengujian-aplikasi-pertemuan-7)
+- [📊 Pertemuan 8 - Data Binding & DataGridView](#-pertemuan-8---data-binding--datagridview)
+  - [Konsep Data Binding & Komponen DataGridView](#-konsep-data-binding--komponen-datagridview)
+  - [Sumber Data: Array 2D, List Object, dan DataTable](#-sumber-data-array-2d-list-object-dan-datatable)
+  - [Komponen Visual yang Digunakan (Pertemuan 8)](#-komponen-visual-yang-digunakan-pertemuan-8)
+  - [Implementasi Kode Program Pertemuan 8](#-implementasi-kode-program-pertemuan-8)
+  - [Penjelasan Logika Binding, Filter & Sanitasi Wildcard](#-penjelasan-logika-binding-filter--sanitasi-wildcard)
+  - [Alur Pengujian Aplikasi Pertemuan 8](#-alur-pengujian-aplikasi-pertemuan-8)
+- [📑 Tugas & Proyek Praktikum](#-tugas--proyek-praktikum)
+  - [🔐 Tugas 1 - Sistem Login Multi-Role & Perhitungan Pajak](#-tugas-1---sistem-login-multi-role--perhitungan-pajak)
+  - [🔄 Tugas Looping - Implementasi Perulangan Console & GUI](#-tugas-looping---implementasi-perulangan-console--gui)
+  - [🎟️ Aplikasi Tiket Bioskop - Kasir Bioskop Berbasis Modul](#️-aplikasi-tiket-bioskop---kasir-bioskop-berbasis-modul)
 
 ---
 
@@ -898,6 +916,995 @@ End If
    - Klik tombol **Tambah**.
    - Muncul dialog konfirmasi: `"Data berhasil disimpan"`, dan seluruh kotak input dibersihkan secara otomatis.
    - Klik tombol **Tampilkan** untuk memverifikasi data baru telah masuk ke dalam `DataGridView`.
+
+---
+
+# 🛡️ Pertemuan 7 - Validasi Input, Error Handling & Naming Convention
+
+## 💡 Konsep Validasi Input & Defensive Programming
+
+Dalam pengembangan aplikasi desktop berbasis Windows Forms, **validasi input** dan **penanganan kesalahan (*Error/Exception Handling*)** merupakan pilar utama dari prinsip *Defensive Programming*. Pendekatan ini memastikan aplikasi tetap tangguh, tidak mudah mengalami *crash* (*unhandled exceptions*), dan memberikan umpan balik (*feedback*) yang jelas kepada pengguna.
+
+Prinsip utama yang diterapkan pada praktikum Pertemuan 7 meliputi:
+1. **Validasi Berlapis**:
+   - Validasi saat pengguna mengetik (*character-level restriction* via event `KeyPress`).
+   - Validasi saat fokus berpindah dari kontrol (*field-level validation* via event `Validating`).
+   - Validasi menyeluruh sebelum aksi penyimpanan data dieksekusi (*form-level validation*).
+2. **Kompilasi Ketat (`Option Strict On`)**:
+   - Mencegah konversi tipe data implisit yang berbahaya (*narrowing conversions*) dan *late binding*, sehingga kesalahan tipe data terdeteksi sejak tahap kompilasi.
+3. **Komponen Visual `ErrorProvider`**:
+   - Memberikan indikator grafis berupa tanda seru merah dan *tooltip* pesan kesalahan di samping kontrol yang tidak valid tanpa mengganggu kenyamanan pengguna.
+4. **Pola Manajemen Resource `Using`**:
+   - Menjamin pelepasan sumber daya eksternal (seperti file I/O `StreamWriter`) secara otomatis setelah proses selesai, bahkan saat terjadi kesalahan tak terduga.
+
+---
+
+## ⚙️ Komparasi Metode Konversi Tipe Data & Exception Handling
+
+Pada form `FrmUjiKonversi`, dilakukan perbandingan 5 metode konversi data dari teks (`String`) ke bilangan bulat (`Integer`):
+
+| Metode Konversi | Karakteristik & Perilaku | Potensi Risiko / Penanganan |
+| :--- | :--- | :--- |
+| **`CInt(teks)`** | Mengonversi ekspresi ke tipe `Integer`. | **Berbahaya**: Langsung melempar `InvalidCastException` jika teks berisi karakter non-numerik (misal `"abc"`). |
+| **`Val(teks)`** | Membaca digit angka dari posisi awal string hingga karakter non-numerik pertama ditemukan. | **Kurang Akurat**: Menghasilkan nilai `0` untuk string kosong dan `"12abc"` diubah menjadi `12` tanpa peringatan. |
+| **`Integer.TryParse(teks, hasil)`** | Mengembalikan nilai boolean (`True`/`False`) penanda keberhasilan konversi tanpa melempar exception. | **Sangat Direkomendasikan (Best Practice)**: Menangani kegagalan parsing secara aman tanpa overhead *exception*. |
+| **`Try...Catch`** | Mengeksekusi konversi di blok `Try` dan menangkap kesalahan di blok `Catch ex As Exception`. | Melindungi aplikasi dari penghentian mendadak (*crash*), menampilkan kotak pesan peringatan yang ramah. |
+| **`Catch Bertingkat`** | Menangkap exception spesifik secara hierarki: `FormatException`, `OverflowException`, `DivideByZeroException`, lalu `Exception`. | Memungkinkan aplikasi memberikan respons dan pesan yang presisi sesuai jenis kegagalan operasi. |
+
+---
+
+## 🛠️ Komponen Visual yang Digunakan (Pertemuan 7)
+
+### 1. Form Utama Navigasi (`FrmUtama`)
+| Kontrol | Design Name | Properti Text | Peranan |
+| :--- | :--- | :--- | :--- |
+| **Label** | `lblJudul` | `Praktikum Pertemuan 7 - Validasi & Error Handling` | Header judul modul praktikum. |
+| **Button** | `btnBukaUjiKonversi` | `1. Buka Uji Konversi & Exception` | Membuka jendela dialog `FrmUjiKonversi`. |
+| **Button** | `btnBukaPendaftaran` | `2. Buka Form Pendaftaran Mahasiswa` | Membuka jendela dialog `FrmPendaftaran`. |
+
+### 2. Form Uji Konversi (`FrmUjiKonversi`)
+| Kontrol | Design Name | Properti Text / Peranan |
+| :--- | :--- | :--- |
+| **TextBox** | `txtInput` | Kotak input teks untuk diuji berbagai metode konversi numerik. |
+| **Button** | `btnCInt`, `btnVal`, `btnTryParse`, `btnTryCatch`, `btnCatchBertingkat` | Memicu masing-masing metode pengujian konversi. |
+| **Label** | `lblHasil` | Menampilkan output hasil konversi atau pesan exception yang tertangkap. |
+
+### 3. Form Pendaftaran Mahasiswa (`FrmPendaftaran`)
+| Kontrol | Design Name | Properti Text / Konfigurasi | Peranan |
+| :--- | :--- | :--- | :--- |
+| **TextBox** | `txtNim` | `MaxLength = 9` | Input Nomor Induk Mahasiswa (tepat 9 digit angka). |
+| **TextBox** | `txtNama` | `MaxLength = 100` | Input nama lengkap mahasiswa. |
+| **ComboBox** | `cboJurusan` | `DropDownStyle = DropDownList` | Pilihan program studi. |
+| **TextBox** | `txtAngkatan` | `MaxLength = 4` | Input tahun angkatan (2015 s.d. tahun sekarang). |
+| **TextBox** | `txtIpk` | `MaxLength = 5` | Input Indeks Prestasi Kumulatif (0,00 s.d. 4,00). |
+| **ErrorProvider** | `errInput` | `BlinkStyle = NeverBlink` | Menampilkan ikon peringatan visual pada kontrol yang tidak valid. |
+| **ListBox** | `lstMahasiswa` | *(Koleksi data)* | Menampilkan daftar mahasiswa yang telah tersimpan in-memory. |
+| **Button** | `btnSimpan`, `btnBersihkan`, `btnEkspor` | Aksi formulir | Menyimpan data, mereset isian form, dan mengekspor ke file CSV. |
+| **Label** | `lblStatus` | `Status: Siap` | Menampilkan status operasional aplikasi secara real-time. |
+
+---
+
+## 💻 Implementasi Kode Program Pertemuan 7
+
+### 1. Modul Validasi Terpusat (`ModValidasi.vb`)
+```vb
+Option Strict On
+
+Imports System.Globalization
+
+Public Module ModValidasi
+    Public Function Kosong(teks As String) As Boolean
+        Return teks.Trim() = ""
+    End Function
+
+    Public Function SemuaDigit(teks As String, panjang As Integer) As Boolean
+        If teks.Length <> panjang Then Return False
+        For Each karakter As Char In teks
+            If karakter < "0"c OrElse karakter > "9"c Then Return False
+        Next
+        Return True
+    End Function
+
+    Public Function CobaDesimal(teks As String, ByRef hasil As Decimal) As Boolean
+        Dim teksTitik As String = teks.Trim().Replace(",", ".")
+        Return Decimal.TryParse(teksTitik, NumberStyles.AllowDecimalPoint,
+                                CultureInfo.InvariantCulture, hasil)
+    End Function
+End Module
+```
+
+### 2. Form Uji Konversi & Penanganan Error (`FrmUjiKonversi.vb`)
+```vb
+Option Strict On
+
+Public Class FrmUjiKonversi
+    Private Sub btnCInt_Click(sender As Object, e As EventArgs) Handles btnCInt.Click
+        Dim angka As Integer = CInt(txtInput.Text)
+        lblHasil.Text = "CInt berhasil: " & angka.ToString()
+    End Sub
+
+    Private Sub btnVal_Click(sender As Object, e As EventArgs) Handles btnVal.Click
+        Dim angka As Double = Val(txtInput.Text)
+        lblHasil.Text = "Val menghasilkan: " & angka.ToString()
+    End Sub
+
+    Private Sub btnTryParse_Click(sender As Object, e As EventArgs) Handles btnTryParse.Click
+        Dim angka As Integer
+        If Integer.TryParse(txtInput.Text, angka) Then
+            lblHasil.Text = "Valid. Nilai angka = " & angka.ToString()
+        Else
+            lblHasil.Text = "Bukan bilangan bulat yang valid. Tidak ada exception."
+        End If
+    End Sub
+
+    Private Sub btnTryCatch_Click(sender As Object, e As EventArgs) Handles btnTryCatch.Click
+        Try
+            Dim angka As Integer = Integer.Parse(txtInput.Text)
+            lblHasil.Text = "Berhasil dikonversi: " & angka.ToString()
+        Catch ex As Exception
+            lblHasil.Text = "Konversi gagal, program tetap berjalan."
+            MessageBox.Show("Input harus bilangan bulat, misalnya 25." & vbCrLf &
+                            "Detail: " & ex.Message, "Input Tidak Valid",
+                            MessageBoxButtons.OK, MessageBoxIcon.Warning)
+        End Try
+    End Sub
+
+    Private Sub btnCatchBertingkat_Click(sender As Object, e As EventArgs) Handles btnCatchBertingkat.Click
+        Try
+            Dim angka As Integer = Integer.Parse(txtInput.Text)
+            Dim hasil As Integer = 1000 \ angka
+            lblHasil.Text = "1000 \ " & angka.ToString() & " = " & hasil.ToString()
+        Catch ex As FormatException
+            lblHasil.Text = "Format salah: input bukan bilangan bulat."
+        Catch ex As OverflowException
+            lblHasil.Text = "Angka terlalu besar untuk tipe Integer."
+        Catch ex As DivideByZeroException
+            lblHasil.Text = "Pembagian dengan nol tidak diperbolehkan."
+        Catch ex As Exception
+            lblHasil.Text = "Error lain: " & ex.Message
+        End Try
+    End Sub
+End Class
+```
+
+### 3. Form Pendaftaran & Ekspor CSV (`FrmPendaftaran.vb`)
+```vb
+Option Strict On
+
+Imports System.ComponentModel
+Imports System.IO
+
+Public Class FrmPendaftaran
+    Private ReadOnly daftarNim As New List(Of String)
+    Private ReadOnly lokasiEkspor As String =
+        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "data-mahasiswa.csv")
+
+    Private Function ValidasiInput() As Boolean
+        errInput.Clear()
+        Dim valid As Boolean = True
+
+        If Kosong(txtNama.Text) Then
+            errInput.SetError(txtNama, "Nama wajib diisi.")
+            valid = False
+        End If
+
+        Dim angkatan As Integer
+        If Not Integer.TryParse(txtAngkatan.Text, angkatan) OrElse
+           angkatan < 2015 OrElse angkatan > Date.Today.Year Then
+            errInput.SetError(txtAngkatan, "Angkatan harus angka 2015 s.d. tahun ini.")
+            valid = False
+        End If
+
+        If Not SemuaDigit(txtNim.Text, 9) Then
+            errInput.SetError(txtNim, "NIM harus 9 digit angka.")
+            valid = False
+        ElseIf daftarNim.Contains(txtNim.Text) Then
+            errInput.SetError(txtNim, "NIM sudah terdaftar.")
+            valid = False
+        End If
+
+        If cboJurusan.SelectedIndex = -1 Then
+            errInput.SetError(cboJurusan, "Pilih salah satu jurusan.")
+            valid = False
+        End If
+
+        Dim ipk As Decimal
+        If Not CobaDesimal(txtIpk.Text, ipk) OrElse ipk < 0D OrElse ipk > 4D Then
+            errInput.SetError(txtIpk, "IPK harus angka 0,00 s.d. 4,00.")
+            valid = False
+        End If
+
+        Return valid
+    End Function
+
+    Private Sub btnSimpan_Click(sender As Object, e As EventArgs) Handles btnSimpan.Click
+        If Not ValidasiInput() Then
+            lblStatus.Text = "Periksa isian yang bertanda merah."
+            Return
+        End If
+
+        Dim ipk As Decimal
+        CobaDesimal(txtIpk.Text, ipk)
+
+        lstMahasiswa.Items.Add(txtNim.Text & " | " & txtNama.Text.Trim() & " | " &
+                               cboJurusan.Text & " | " & txtAngkatan.Text & " | " & ipk.ToString("0.00"))
+        daftarNim.Add(txtNim.Text)
+
+        lblStatus.Text = "Data " & txtNama.Text.Trim() & " tersimpan."
+        BersihkanForm()
+    End Sub
+
+    Private Sub txtNim_Validating(sender As Object, e As CancelEventArgs) Handles txtNim.Validating
+        If txtNim.Text = "" Then Return
+        If SemuaDigit(txtNim.Text, 9) Then
+            errInput.SetError(txtNim, "")
+        Else
+            errInput.SetError(txtNim, "NIM harus 9 digit angka.")
+        End If
+    End Sub
+
+    Private Function EscapeCsv(teks As String) As String
+        If teks.Contains(",") OrElse teks.Contains("""") OrElse teks.Contains(";") OrElse teks.Contains(vbCrLf) Then
+            Return """" & teks.Replace("""", """""") & """"
+        Else
+            Return teks
+        End If
+    End Function
+
+    Private Sub btnEkspor_Click(sender As Object, e As EventArgs) Handles btnEkspor.Click
+        If lstMahasiswa.Items.Count = 0 Then
+            MessageBox.Show("Belum ada data mahasiswa untuk diekspor.", "Peringatan",
+                            MessageBoxButtons.OK, MessageBoxIcon.Warning)
+            Return
+        End If
+
+        Try
+            Using penulis As New StreamWriter(lokasiEkspor, False)
+                penulis.WriteLine("NIM,Nama,Jurusan,Angkatan,IPK")
+                For Each item As Object In lstMahasiswa.Items
+                    Dim baris As String = item.ToString()
+                    Dim kolom() As String = baris.Split(New String() {" | "}, StringSplitOptions.None)
+                    If kolom.Length = 5 Then
+                        Dim barisCsv As String = String.Format("{0},{1},{2},{3},{4}",
+                                                               EscapeCsv(kolom(0)),
+                                                               EscapeCsv(kolom(1)),
+                                                               EscapeCsv(kolom(2)),
+                                                               EscapeCsv(kolom(3)),
+                                                               EscapeCsv(kolom(4)))
+                        penulis.WriteLine(barisCsv)
+                    Else
+                        penulis.WriteLine(baris.Replace(" | ", ","))
+                    End If
+                Next
+            End Using
+
+            lblStatus.Text = "Data diekspor ke " & lokasiEkspor
+            MessageBox.Show("Data mahasiswa berhasil diekspor ke:" & vbCrLf & lokasiEkspor,
+                            "Ekspor Berhasil", MessageBoxButtons.OK, MessageBoxIcon.Information)
+        Catch ex As IOException
+            MessageBox.Show("File sedang dipakai program lain atau tidak bisa ditulis." &
+                            vbCrLf & ex.Message, "Ekspor Gagal", MessageBoxButtons.OK, MessageBoxIcon.Error)
+        Catch ex As Exception
+            MessageBox.Show("Terjadi kesalahan saat mengekspor: " & ex.Message,
+                            "Ekspor Gagal", MessageBoxButtons.OK, MessageBoxIcon.Error)
+        End Try
+    End Sub
+
+    Private Sub BersihkanForm()
+        txtNim.Clear()
+        txtNama.Clear()
+        txtAngkatan.Clear()
+        txtIpk.Clear()
+        cboJurusan.SelectedIndex = -1
+        errInput.Clear()
+        txtNim.Focus()
+    End Sub
+
+    Private Sub btnBersihkan_Click(sender As Object, e As EventArgs) Handles btnBersihkan.Click
+        BersihkanForm()
+        lblStatus.Text = "Form dibersihkan."
+    End Sub
+End Class
+```
+
+---
+
+## 🔍 Penjelasan Logika Validasi & Ekspor CSV
+
+### 1. Robust Decimal Parsing (`CobaDesimal`)
+Fungsi `CobaDesimal` mengatasi perbedaan penulisan pemisah desimal antara standar Indonesia (koma `,`) dan standar internasional/US (titik `.`):
+```vb
+Dim teksTitik As String = teks.Trim().Replace(",", ".")
+Return Decimal.TryParse(teksTitik, NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, hasil)
+```
+Dengan mengganti koma menjadi titik dan menggunakan `CultureInfo.InvariantCulture`, pengguna dapat menginput `3,75` maupun `3.75` dengan hasil konversi yang tetap valid.
+
+### 2. Pencegahan Duplikasi Data In-Memory
+Sebelum NIM baru disimpan, program memeriksa koleksi `daftarNim`:
+```vb
+If daftarNim.Contains(txtNim.Text) Then
+    errInput.SetError(txtNim, "NIM sudah terdaftar.")
+    valid = False
+End If
+```
+Hal ini memastikan tidak ada mahasiswa dengan NIM ganda di dalam antrean pendaftaran.
+
+### 3. Format Ekspor CSV Standar RFC 4180
+Untuk menghindari file CSV rusak akibat adanya karakter koma atau tanda kutip di dalam nilai string:
+```vb
+Private Function EscapeCsv(teks As String) As String
+    If teks.Contains(",") OrElse teks.Contains("""") OrElse teks.Contains(";") OrElse teks.Contains(vbCrLf) Then
+        Return """" & teks.Replace("""", """""") & """"
+    Else
+        Return teks
+    End If
+End Function
+```
+Fungsi ini otomatis mengapit string dengan tanda kutip ganda dan menggandakan tanda kutip yang ada di dalam teks (`""`).
+
+---
+
+## 🚀 Alur & Hasil Pengujian Aplikasi Pertemuan 7
+
+| Skenario Pengujian | Input yang Diuji | Respon & Perilaku Sistem | Status |
+| :--- | :--- | :--- | :---: |
+| **Parsing `TryParse` Valid** | `txtInput: 25` | Menampilkan nilai numerik tanpa exception (`Valid. Nilai angka = 25`). | **Berhasil** |
+| **Parsing `TryParse` Invalid** | `txtInput: abc` | Menampilkan pesan error aman tanpa menghentikan program. | **Berhasil** |
+| **Pembagian Nol (`Catch Bertingkat`)** | `txtInput: 0` | Menangkap `DivideByZeroException` dengan pesan spesifik. | **Berhasil** |
+| **Overflow Integer** | `txtInput: 99999999999` | Menangkap `OverflowException` (angka melebihi rentang `Integer`). | **Berhasil** |
+| **NIM < 9 Digit** | `txtNim: 231401` | Muncul tanda seru merah `ErrorProvider`: *"NIM harus 9 digit angka."* | **Berhasil** |
+| **NIM Duplikat** | NIM sama dimasukkan dua kali | Muncul `ErrorProvider`: *"NIM sudah terdaftar."* | **Berhasil** |
+| **Ekspor File CSV** | Klik tombol Ekspor | Menghasilkan file `data-mahasiswa.csv` di folder Documents secara aman via `Using`. | **Berhasil** |
+
+---
+
+# 📊 Pertemuan 8 - Data Binding & DataGridView
+
+## 💡 Konsep Data Binding & Komponen DataGridView
+
+**Data Binding** adalah mekanisme penghubung antara komponen antarmuka pengguna (*UI Controls*) dengan sumber data (*Data Source*). Pada Windows Forms, kontrol **`DataGridView`** adalah komponen tabular serbaguna yang mampu menampilkan, memanipulasi, dan memformat dataset dalam jumlah banyak.
+
+Pada praktikum Pertemuan 8, dipelajari 3 arsitektur sumber data dan peranan komponen **`BindingSource`**:
+1. **Unbound / Manual Populating (Array 2 Dimensi)**:
+   - Data dibaca secara iteratif dari matriks dan dimasukkan manual baris demi baris menggunakan `dgvMahasiswa.Rows.Add(...)`.
+2. **Object Data Binding (`List(Of Mahasiswa)`)**:
+   - Menghubungkan koleksi objek POCO (*Plain Old CLR Object*) bertipe kuat (*strongly-typed*) ke `DataGridView` melalui perantara `BindingSource`.
+3. **ADO.NET In-Memory Data Binding (`DataTable`)**:
+   - Memanfaatkan objek tabel dinamis dengan skema kolom terdefinisi. Memungkinkan filtering dinamis secara instan menggunakan properti `BindingSource.Filter`.
+4. **Peranan `BindingSource`**:
+   - Bertindak sebagai lapisan perantara (*broker*) antara data mentah dengan antarmuka. Menyediakan fungsionalitas navigasi pointer, sorting otomatis, filtering, serta pembaruan tampilan instan (*data refresh*).
+
+---
+
+## 🛠️ Sumber Data: Array 2D, List Object, dan DataTable
+
+Perbandingan karakteristik ketiga pendekatan data binding yang diimplementasikan:
+
+| Aspek | Array 2 Dimensi (`String(,)`) | Generic List (`List(Of Mahasiswa)`) | ADO.NET (`DataTable`) |
+| :--- | :--- | :--- | :--- |
+| **Representasi Data** | Matriks primitif berindeks baris-kolom. | Kumpulan objek kelas dengan properti strongly-typed. | Baris dan kolom tabular in-memory dengan tipe data tiap kolom. |
+| **Kemudahan Binding** | Manual via iterasi `Rows.Add()`. | Otomatis via `bsMahasiswa.DataSource`. | Otomatis via `bsMahasiswa.DataSource`. |
+| **Fasilitas Filtering** | Manual via algoritma pencarian. | Manual via LINQ atau iterasi `IndexOf`. | Otomatis via ekspresi SQL string pada `bsMahasiswa.Filter`. |
+| **Skalabilitas** | Statis, ukuran sulit diubah. | Dinamis, efisien untuk manipulasi objek OOP. | Sangat fleksibel, cocok untuk sinkronisasi database relasional. |
+
+---
+
+## 🎛️ Komponen Visual yang Digunakan (Pertemuan 8)
+
+### 1. Form Navigasi Utama (`FrmUtama`)
+- `btnDariArray`: Membuka form demonstrasi array 2D manual.
+- `btnDariList`: Membuka form binding `List(Of Mahasiswa)` dengan penambahan data baru.
+- `btnDataTable`: Membuka form binding `DataTable` dengan fitur live search & formatting kolom.
+- `btnCariList`: Membuka form pencarian dinamis pada `List(Of Mahasiswa)`.
+
+### 2. Form Binding Array 2D (`FrmDariArray`)
+- `dgvMahasiswa`: Tabel tampilan data mahasiswa.
+- `btnTampilkan`: Membaca matriks `dataMahasiswa` dan memuatnya ke tabel via loop `For`.
+- `btnKosongkan`: Membersihkan seluruh baris tabel menggunakan `.Rows.Clear()`.
+- `lblJumlah`: Menampilkan status total baris data yang tampil.
+
+### 3. Form Binding Objek & Entri Data (`FrmDariList`)
+- `dgvMahasiswa`: Grid yang terikat (*data-bound*) ke `bsMahasiswa`.
+- `bsMahasiswa`: Komponen `BindingSource` sebagai penyedia data binding.
+- `txtNim`, `txtNama`, `cboJurusan`, `txtAngkatan`, `txtIpk`: Kotak input data mahasiswa.
+- `btnTambah`: Tombol validasi dan pendaftaran objek baru ke dalam `BindingSource`.
+- `errInput`: Komponen `ErrorProvider` untuk validasi field formulir.
+
+### 4. Form Filtering DataTable (`FrmDataTable`)
+- `txtCari`: Kotak input pencarian teks secara real-time (`TextChanged`).
+- `btnRapikan`: Tombol styling dan kustomisasi header, auto-fill, dan format mata uang/desimal `N2`.
+- `dgvMahasiswa` & `bsMahasiswa`: Tabel dan binding source berbasis `DataTable`.
+
+### 5. Form Pencarian Objek List (`FrmCariList`)
+- `txtCari`: Kotak teks pencarian interaktif berbasis nama atau NIM.
+- `dgvMahasiswa` & `bsMahasiswa`: Tabel dan binding source terikat pada `List(Of Mahasiswa)`.
+
+---
+
+## 💻 Implementasi Kode Program Pertemuan 8
+
+### 1. Entitas Model Mahasiswa (`Mahasiswa.vb`)
+```vb
+Option Strict On
+
+Public Class Mahasiswa
+    Public Property Nim As String
+    Public Property Nama As String
+    Public Property Jurusan As String
+    Public Property Angkatan As Integer
+    Public Property Ipk As Decimal
+
+    Public Sub New(nim As String, nama As String, jurusan As String, angkatan As Integer, ipk As Decimal)
+        Me.Nim = nim
+        Me.Nama = nama
+        Me.Jurusan = jurusan
+        Me.Angkatan = angkatan
+        Me.Ipk = ipk
+    End Sub
+End Class
+```
+
+### 2. Modul Data Contoh (`ModDataContoh.vb`) & Sanitasi Filter (`ModPencarian.vb`)
+```vb
+Option Strict On
+
+Module ModDataContoh
+    Public Function BuatDaftarMahasiswa() As List(Of Mahasiswa)
+        Dim daftar As New List(Of Mahasiswa)
+        daftar.Add(New Mahasiswa("231712001", "Andi Pratama", "Teknik Informatika", 2023, 3.45D))
+        daftar.Add(New Mahasiswa("231712002", "Sari Wulandari", "Sistem Informasi", 2023, 3.8D))
+        daftar.Add(New Mahasiswa("221712015", "Budi Santoso", "Teknik Informatika", 2022, 3.12D))
+        daftar.Add(New Mahasiswa("241712007", "Dimas Siregar", "Teknik Komputer", 2024, 2.95D))
+        daftar.Add(New Mahasiswa("221712020", "Rina Marpaung", "Manajemen Informatika", 2022, 3.5D))
+        daftar.Add(New Mahasiswa("241712011", "Putri Lubis", "Sistem Informasi", 2024, 3.91D))
+        daftar.Add(New Mahasiswa("231712019", "Fajar Nasution", "Teknik Informatika", 2023, 3.28D))
+        daftar.Add(New Mahasiswa("221712031", "Maya Sari Hasibuan", "Teknik Komputer", 2022, 3.55D))
+        Return daftar
+    End Function
+End Module
+
+Module ModPencarian
+    Public Function AmankanTeksFilter(teks As String) As String
+        Dim hasil As String = teks
+        hasil = hasil.Replace("'", "''")
+        hasil = hasil.Replace("[", "[[]")
+        hasil = hasil.Replace("*", "[*]")
+        hasil = hasil.Replace("%", "[%]")
+        Return hasil
+    End Function
+End Module
+```
+
+### 3. Binding Manual dari Array 2 Dimensi (`FrmDariArray.vb`)
+```vb
+Option Strict On
+
+Public Class FrmDariArray
+    Private ReadOnly dataMahasiswa(,) As String = {
+        {"231712001", "Andi Pratama", "Teknik Informatika", "2023", "3.45"},
+        {"231712002", "Sari Wulandari", "Sistem Informasi", "2023", "3.8"},
+        {"221712015", "Budi Santoso", "Teknik Informatika", "2022", "3.12"},
+        {"241712007", "Dimas Siregar", "Teknik Komputer", "2024", "2.95"},
+        {"221712020", "Rina Marpaung", "Manajemen Informatika", "2022", "3.5"},
+        {"241712011", "Putri Lubis", "Sistem Informasi", "2024", "3.91"},
+        {"231712019", "Fajar Nasution", "Teknik Informatika", "2023", "3.28"},
+        {"221712031", "Maya Sari Hasibuan", "Teknik Komputer", "2022", "3.55"}
+    }
+
+    Private Sub btnTampilkan_Click(sender As Object, e As EventArgs) Handles btnTampilkan.Click
+        dgvMahasiswa.Rows.Clear()
+        For i As Integer = 0 To dataMahasiswa.GetUpperBound(0)
+            dgvMahasiswa.Rows.Add(
+                dataMahasiswa(i, 0),
+                dataMahasiswa(i, 1),
+                dataMahasiswa(i, 2),
+                dataMahasiswa(i, 3),
+                dataMahasiswa(i, 4)
+            )
+        Next
+        lblJumlah.Text = "Jumlah data: " & dgvMahasiswa.Rows.Count.ToString()
+    End Sub
+
+    Private Sub btnKosongkan_Click(sender As Object, e As EventArgs) Handles btnKosongkan.Click
+        dgvMahasiswa.Rows.Clear()
+        lblJumlah.Text = "Jumlah data: 0"
+    End Sub
+End Class
+```
+
+### 4. Data Binding List Mahasiswa & Form Entri (`FrmDariList.vb`)
+```vb
+Option Strict On
+
+Public Class FrmDariList
+    Private daftarMahasiswa As List(Of Mahasiswa)
+
+    Private Sub FrmDariList_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+        daftarMahasiswa = New List(Of Mahasiswa)
+        daftarMahasiswa.Add(New Mahasiswa("231712001", "Andi Pratama", "Teknik Informatika", 2023, 3.45D))
+        daftarMahasiswa.Add(New Mahasiswa("231712002", "Sari Wulandari", "Sistem Informasi", 2023, 3.8D))
+        daftarMahasiswa.Add(New Mahasiswa("221712015", "Budi Santoso", "Teknik Informatika", 2022, 3.12D))
+        daftarMahasiswa.Add(New Mahasiswa("241712007", "Dimas Siregar", "Teknik Komputer", 2024, 2.95D))
+
+        cboJurusan.Items.AddRange(New String() {"Teknik Informatika", "Sistem Informasi", "Manajemen Informatika", "Teknik Komputer"})
+
+        bsMahasiswa.DataSource = daftarMahasiswa
+        dgvMahasiswa.DataSource = bsMahasiswa
+        PerbaruiJumlah()
+    End Sub
+
+    Private Sub btnTambah_Click(sender As Object, e As EventArgs) Handles btnTambah.Click
+        Dim valid As Boolean = True
+        errInput.Clear()
+
+        If Not ValidasiNim(txtNim.Text.Trim()) Then
+            errInput.SetError(txtNim, "NIM harus terdiri dari 9 digit angka.")
+            valid = False
+        Else
+            For Each mhs As Mahasiswa In daftarMahasiswa
+                If mhs.Nim = txtNim.Text.Trim() Then
+                    errInput.SetError(txtNim, "NIM sudah terdaftar.")
+                    valid = False
+                    Exit For
+                End If
+            Next
+        End If
+
+        If Not ValidasiNama(txtNama.Text.Trim()) Then
+            errInput.SetError(txtNama, "Nama wajib diisi.")
+            valid = False
+        End If
+
+        If Not ValidasiJurusan(If(cboJurusan.SelectedItem IsNot Nothing, cboJurusan.SelectedItem.ToString(), "")) Then
+            errInput.SetError(cboJurusan, "Jurusan wajib dipilih.")
+            valid = False
+        End If
+
+        Dim angkatan As Integer
+        If Not ValidasiAngkatan(txtAngkatan.Text.Trim(), angkatan) Then
+            errInput.SetError(txtAngkatan, "Angkatan harus antara 2015 dan " & Date.Now.Year.ToString() & ".")
+            valid = False
+        End If
+
+        Dim ipk As Decimal
+        If Not ValidasiIpk(txtIpk.Text.Trim(), ipk) Then
+            errInput.SetError(txtIpk, "IPK harus antara 0 dan 4.")
+            valid = False
+        End If
+
+        If Not valid Then Return
+
+        Dim mhsBaru As New Mahasiswa(
+            txtNim.Text.Trim(),
+            txtNama.Text.Trim(),
+            cboJurusan.SelectedItem.ToString(),
+            angkatan,
+            ipk
+        )
+
+        bsMahasiswa.Add(mhsBaru)
+        PerbaruiJumlah()
+        BersihkanInput()
+    End Sub
+
+    Private Sub PerbaruiJumlah()
+        lblJumlah.Text = "Jumlah data: " & daftarMahasiswa.Count.ToString()
+    End Sub
+
+    Private Sub BersihkanInput()
+        txtNim.Clear()
+        txtNama.Clear()
+        cboJurusan.SelectedIndex = -1
+        txtAngkatan.Clear()
+        txtIpk.Clear()
+        errInput.Clear()
+        txtNim.Focus()
+    End Sub
+End Class
+```
+
+### 5. Filtering DataTable & Kustomisasi Kolom (`FrmDataTable.vb`)
+```vb
+Option Strict On
+
+Public Class FrmDataTable
+    Private dtMahasiswa As DataTable
+    Private jumlahTotal As Integer
+
+    Private Sub FrmDataTable_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+        dtMahasiswa = New DataTable("Mahasiswa")
+        dtMahasiswa.Columns.Add("Nim", GetType(String))
+        dtMahasiswa.Columns.Add("Nama", GetType(String))
+        dtMahasiswa.Columns.Add("Jurusan", GetType(String))
+        dtMahasiswa.Columns.Add("Angkatan", GetType(Integer))
+        dtMahasiswa.Columns.Add("Ipk", GetType(Decimal))
+
+        dtMahasiswa.Rows.Add("231712001", "Andi Pratama", "Teknik Informatika", 2023, 3.45D)
+        dtMahasiswa.Rows.Add("231712002", "Sari Wulandari", "Sistem Informasi", 2023, 3.8D)
+        dtMahasiswa.Rows.Add("221712015", "Budi Santoso", "Teknik Informatika", 2022, 3.12D)
+        dtMahasiswa.Rows.Add("241712007", "Dimas Siregar", "Teknik Komputer", 2024, 2.95D)
+        dtMahasiswa.Rows.Add("221712020", "Rina Marpaung", "Manajemen Informatika", 2022, 3.5D)
+        dtMahasiswa.Rows.Add("241712011", "Putri Lubis", "Sistem Informasi", 2024, 3.91D)
+        dtMahasiswa.Rows.Add("231712019", "Fajar Nasution", "Teknik Informatika", 2023, 3.28D)
+        dtMahasiswa.Rows.Add("221712031", "Maya Sari Hasibuan", "Teknik Komputer", 2022, 3.55D)
+
+        jumlahTotal = dtMahasiswa.Rows.Count
+        bsMahasiswa.DataSource = dtMahasiswa
+        dgvMahasiswa.DataSource = bsMahasiswa
+        PerbaruiJumlah()
+    End Sub
+
+    Private Sub txtCari_TextChanged(sender As Object, e As EventArgs) Handles txtCari.TextChanged
+        Dim kata As String = txtCari.Text.Trim()
+        If kata.Length = 0 Then
+            bsMahasiswa.RemoveFilter()
+        Else
+            Dim aman As String = AmankanTeksFilter(kata)
+            bsMahasiswa.Filter = "Nama LIKE '%" & aman & "%' OR Nim LIKE '%" & aman & "%'"
+        End If
+        PerbaruiJumlah()
+    End Sub
+
+    Private Sub btnRapikan_Click(sender As Object, e As EventArgs) Handles btnRapikan.Click
+        If dgvMahasiswa.Columns.Contains("Nim") Then
+            dgvMahasiswa.Columns("Nim").HeaderText = "NIM"
+        End If
+        If dgvMahasiswa.Columns.Contains("Ipk") Then
+            dgvMahasiswa.Columns("Ipk").HeaderText = "IPK"
+            dgvMahasiswa.Columns("Ipk").DefaultCellStyle.Format = "N2"
+            dgvMahasiswa.Columns("Ipk").DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight
+        End If
+        If dgvMahasiswa.Columns.Contains("Angkatan") Then
+            dgvMahasiswa.Columns("Angkatan").DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter
+        End If
+        If dgvMahasiswa.Columns.Contains("Nama") Then
+            dgvMahasiswa.Columns("Nama").FillWeight = 150
+        End If
+        dgvMahasiswa.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill
+    End Sub
+
+    Private Sub PerbaruiJumlah()
+        lblJumlah.Text = "Jumlah data: " & bsMahasiswa.Count.ToString() & " dari " & jumlahTotal.ToString()
+    End Sub
+End Class
+```
+
+### 6. Pencarian pada Generic List (`FrmCariList.vb`)
+```vb
+Option Strict On
+
+Public Class FrmCariList
+    Private daftarSemua As List(Of Mahasiswa)
+
+    Private Sub FrmCariList_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+        daftarSemua = BuatDaftarMahasiswa()
+        bsMahasiswa.DataSource = daftarSemua
+        dgvMahasiswa.DataSource = bsMahasiswa
+        PerbaruiJumlah()
+    End Sub
+
+    Private Sub txtCari_TextChanged(sender As Object, e As EventArgs) Handles txtCari.TextChanged
+        Dim kata As String = txtCari.Text.Trim()
+        If kata.Length = 0 Then
+            bsMahasiswa.DataSource = daftarSemua
+        Else
+            Dim hasil As New List(Of Mahasiswa)
+            For Each mhs As Mahasiswa In daftarSemua
+                If mhs.Nama.IndexOf(kata, StringComparison.OrdinalIgnoreCase) >= 0 OrElse
+                   mhs.Nim.IndexOf(kata, StringComparison.OrdinalIgnoreCase) >= 0 Then
+                    hasil.Add(mhs)
+                End If
+            Next
+            bsMahasiswa.DataSource = hasil
+        End If
+        dgvMahasiswa.DataSource = bsMahasiswa
+        PerbaruiJumlah()
+    End Sub
+
+    Private Sub PerbaruiJumlah()
+        lblJumlah.Text = "Jumlah data: " & bsMahasiswa.Count.ToString() & " dari " & daftarSemua.Count.ToString()
+    End Sub
+End Class
+```
+
+---
+
+## 🔍 Penjelasan Logika Binding, Filter & Sanitasi Wildcard
+
+### 1. Filter Dinamis dengan BindingSource
+Pada `FrmDataTable`, properti `BindingSource.Filter` digunakan untuk menyaring baris `DataTable` secara real-time tanpa perlu query ulang ke sumber data. Ekspresi filter menyerupai klausa `WHERE` pada SQL:
+```vb
+bsMahasiswa.Filter = "Nama LIKE '%" & aman & "%' OR Nim LIKE '%" & aman & "%'"
+```
+
+### 2. Pencegahan Filter Crash dengan Sanitasi Karakter (`AmankanTeksFilter`)
+Dalam sintaks DataView filter, karakter `'`, `[`, `*`, dan `%` memiliki arti khusus. Jika pengguna mengetikkan karakter tersebut tanpa pengamanan, aplikasi dapat melempar `EvaluateException`. Fungsi `AmankanTeksFilter` menetralkan karakter berbahaya:
+* Mengganti tanda petik tunggal `'` menjadi dua petik tunggal `''`.
+* Mengapit tanda kurung siku `[` menjadi `[[]`.
+* Mengapit simbol wildcard `*` dan `%` menjadi `[*]` dan `[%]`.
+
+### 3. Kustomisasi Cell Formatting & AutoSize
+Tombol **Rapikan Tampilan** menerapkan standar presentasi GUI:
+* **Format Numerik Desimal**: `DefaultCellStyle.Format = "N2"` memastikan nilai IPK selalu dicetak dengan dua digit di belakang desimal (misal `3.80`).
+* **Text Alignment**: Angka IPK diratakan ke kanan (`MiddleRight`), tahun angkatan di tengah (`MiddleCenter`), dan teks nama di kiri (`MiddleLeft`).
+* **Column Sizing**: Mengatur `AutoSizeColumnsMode = Fill` agar lebar tabel menyesuaikan resolusi jendela form secara proporsional.
+
+---
+
+## 🚀 Alur Pengujian Aplikasi Pertemuan 8
+
+1. **Jalankan Aplikasi**: Buka solusi `Pertemuan8.slnx` dan tekan `F5`.
+2. **Uji Array 2 Dimensi (`FrmDariArray`)**:
+   - Klik **Tampilkan Data Array**: 8 data mahasiswa dimuat ke dalam `DataGridView`.
+   - Klik **Kosongkan**: Seluruh baris terhapus dan label status menampilkan `Jumlah data: 0`.
+3. **Uji Object Data Binding (`FrmDariList`)**:
+   - Periksa 4 data awal yang otomatis terikat melalui `BindingSource`.
+   - Coba input NIM kurang dari 9 digit: `ErrorProvider` menampilkan peringatan.
+   - Masukkan data lengkap mahasiswa baru dan klik **Tambah**: Baris baru langsung muncul di baris bawah grid dan counter jumlah data bertambah otomatis.
+4. **Uji Live Search DataTable (`FrmDataTable`)**:
+   - Ketik nama `"Andi"` pada kotak pencarian: Grid langsung menyaring dan menyisakan data Andi Pratama.
+   - Ketik potongan NIM `"2015"`: Grid menyaring mahasiswa dengan NIM `221712015`.
+   - Kosongkan kotak teks: Grid menampilkan kembali seluruh 8 data awal secara instan.
+   - Klik tombol **Rapikan Tampilan**: Kolom IPK otomatis rata kanan dan berformat 2 desimal, kolom terdistribusi penuh mengisi form.
+5. **Uji Filter List (`FrmCariList`)**:
+   - Ketik `"Lubis"`: Sistem menyaring koleksi `List(Of Mahasiswa)` tanpa case-sensitivity dan memperbarui binding grid.
+
+---
+
+# 📑 Tugas & Proyek Praktikum
+
+## 🔐 Tugas 1 - Sistem Login Multi-Role & Perhitungan Pajak
+
+Proyek `Tugas1` (solusi `testo.slnx`) mengimplementasikan sistem autentikasi pengguna berbasis multi-role (*Role-Based Access*) yang terhubung ke kalkulator perhitungan pajak penghasilan bertingkat.
+
+### 1. Fitur Utama
+* **Logo Peran Dinamis (*Dynamic Role Image*)**: Logo form berubah otomatis saat pengguna memilih role `Manager` (`Assets\manager.png`) atau `Staff` (`Assets\staff.png`).
+* **Validasi Kredensial Akun**:
+  * Role Manager: Nama `"fikri"`, NIM `"241712027"`
+  * Role Staff: Nama `"yuzaki"`, NIM `"241712028"`
+* **Pencegahan Karakter Tak Valid**: Nama hanya menerima huruf/spasi, sedangkan NIM dan Pendapatan hanya menerima angka (`KeyPress`).
+* **Skema Pajak Progresif**:
+  $$\text{Tarif Pajak} = \begin{cases} 30\% & \text{jika Pendapatan} > 100.000.000 \\ 20\% & \text{jika Pendapatan} > 30.000.000 \\ 10\% & \text{jika Pendapatan} > 5.000.000 \\ 0\% & \text{jika Pendapatan} \le 5.000.000 \end{cases}$$
+
+### 2. Implementasi Form Login (`Login.vb`)
+```vb
+Public Class Login
+    Private Sub cmbRole_SelectedIndexChanged(sender As Object, e As EventArgs) Handles cmbRole.SelectedIndexChanged
+        If cmbRole.Text = "Manager" Then
+            picLogo.Image = Image.FromFile(Application.StartupPath & "\Assets\manager.png")
+        ElseIf cmbRole.Text = "Staff" Then
+            picLogo.Image = Image.FromFile(Application.StartupPath & "\Assets\staff.png")
+        End If
+    End Sub
+
+    Private Sub btnLogin_Click(sender As Object, e As EventArgs) Handles btnLogin.Click
+        Dim Nama As String = txtNama.Text().ToLower()
+        Dim Nim As String = txtNim.Text()
+        Dim Role As String = cmbRole.SelectedItem.ToString()
+
+        If Nama = "fikri" AndAlso Nim = "241712027" AndAlso Role = "Manager" Then
+            txtNama.Clear()
+            txtNim.Clear()
+            Pajak.Show()
+            Me.Hide()
+        ElseIf Nama = "yuzaki" AndAlso Nim = "241712028" AndAlso Role = "Staff" Then
+            txtNama.Clear()
+            txtNim.Clear()
+            Pajak.Show()
+            Me.Hide()
+        Else
+            MessageBox.Show("Akun Salah", "Peringatan", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+            txtNama.Focus()
+            Return
+        End If
+
+        MessageBox.Show("Login berhasil")
+    End Sub
+
+    Private Sub txtNama_KeyPress(sender As Object, e As KeyPressEventArgs) Handles txtNama.KeyPress
+        If Not Char.IsControl(e.KeyChar) AndAlso Not Char.IsLetter(e.KeyChar) AndAlso Not Char.IsWhiteSpace(e.KeyChar) Then
+            e.Handled = True
+        End If
+    End Sub
+
+    Private Sub txtNim_KeyPress(sender As Object, e As KeyPressEventArgs) Handles txtNim.KeyPress
+        If Not Char.IsControl(e.KeyChar) AndAlso Not Char.IsDigit(e.KeyChar) Then
+            e.Handled = True
+        End If
+    End Sub
+
+    Private Sub btnKeluar_Click(sender As Object, e As EventArgs) Handles btnKeluar.Click
+        Me.Close()
+    End Sub
+End Class
+```
+
+### 3. Implementasi Form Pajak (`Pajak.vb`)
+```vb
+Public Class Pajak
+    Private Sub txtNilai_KeyPress(sender As Object, e As KeyPressEventArgs) Handles txtNilai.KeyPress
+        If Not Char.IsControl(e.KeyChar) AndAlso Not Char.IsDigit(e.KeyChar) Then
+            e.Handled = True
+        End If
+    End Sub
+
+    Private Sub btnHitung_Click(sender As Object, e As EventArgs) Handles btnHitung.Click
+        Dim pendapatan As Double
+        Dim pajak As Double
+
+        pendapatan = Val(txtNilai.Text)
+
+        If pendapatan > 100000000 Then
+            pajak = pendapatan * 0.3
+        ElseIf pendapatan > 30000000 Then
+            pajak = pendapatan * 0.2
+        ElseIf pendapatan > 5000000 Then
+            pajak = pendapatan * 0.1
+        Else
+            pajak = 0
+        End If
+
+        MessageBox.Show("Pajak yang harus dibayar = Rp. " & pajak.ToString("N0"))
+    End Sub
+
+    Private Sub btnKeluar_Click(sender As Object, e As EventArgs) Handles btnKeluar.Click
+        Login.Show()
+        Me.Close()
+    End Sub
+End Class
+```
+
+---
+
+## 🔄 Tugas Looping - Implementasi Perulangan Console & GUI
+
+Proyek `tugasLoop` (solusi `tugasLoop.slnx`) membandingkan dan mendemonstrasikan implementasi struktur perulangan `For...Next` dan `Do While...Loop` pada aplikasi **Console** dan antarmuka **Windows Forms**:
+
+### 1. Program 1: Console App `For...Next` (`Program1_ForNext`)
+```vb
+Imports System
+
+Module Program
+    Sub Main(args As String())
+        For i As Integer = 1 To 10
+            Console.WriteLine("Angka ke-" & i)
+        Next
+    End Sub
+End Module
+```
+* **Output**: Mencetak baris `Angka ke-1` sampai `Angka ke-10`. Cocok digunakan saat jumlah iterasi sudah pasti.
+
+### 2. Program 2: Console App `Do While...Loop` (`Program2_DoWhile`)
+```vb
+Imports System
+
+Module Program
+    Sub Main(args As String())
+        Dim counter As Integer = 1
+        Do While counter <= 5
+            Console.WriteLine("Nilai angka: " & counter)
+            counter += 1
+        Loop
+    End Sub
+End Module
+```
+* **Output**: Mencetak `Nilai angka: 1` sampai `5`. Nilai `counter` di-increment manual di setiap iterasi untuk mencegah kondisi *infinite loop*.
+
+### 3. Program 3: Windows Forms App Interaktif (`tugasLoop\Form1.vb`)
+```vb
+Public Class Form1
+    Private Sub btnForNext_Click(sender As Object, e As EventArgs) Handles btnForNext.Click
+        lstOutput.Items.Clear()
+        For i As Integer = 1 To 10
+            lstOutput.Items.Add("Angka ke-" & i)
+        Next
+    End Sub
+
+    Private Sub btnDoWhile_Click(sender As Object, e As EventArgs) Handles btnDoWhile.Click
+        lstOutput.Items.Clear()
+        Dim counter As Integer = 1
+        Do While counter <= 5
+            lstOutput.Items.Add("Nilai angka: " & counter)
+            counter += 1
+        Loop
+    End Sub
+
+    Private Sub btnClear_Click(sender As Object, e As EventArgs) Handles btnClear.Click
+        lstOutput.Items.Clear()
+    End Sub
+End Class
+```
+
+---
+
+## 🎟️ Aplikasi Tiket Bioskop - Kasir Bioskop Berbasis Modul
+
+Proyek `AplikasiTiketBioskop` merupakan implementasi sistem kasir pemesanan tiket bioskop berbasis Windows Forms yang menerapkan arsitektur pemisahan logika perhitungan ke dalam **Module** (`ModTiket.vb`).
+
+### 1. Skema Bisnis & Aturan Perhitungan
+* **Harga Tiket Tetap**: `Rp 50.000` per lembar tiket (`HARGA_TIKET = 50000D`).
+* **Subtotal**: `jumlahTiket * HARGA_TIKET`.
+* **Skema Diskon**:
+  * Jika pembelian **kurang dari 5 tiket** $\rightarrow$ Diskon **0%**.
+  * Jika pembelian **minimal 5 tiket** dan berstatus **Member** $\rightarrow$ Diskon **15%**.
+  * Jika pembelian **minimal 5 tiket** dan **Bukan Member** $\rightarrow$ Diskon **10%**.
+* **Total Bayar**: `subtotal - nilaiDiskon`.
+
+### 2. Modul Logika Perhitungan Tiket (`ModTiket.vb`)
+```vb
+Module ModTiket
+    Public Const HARGA_TIKET As Decimal = 50000D
+
+    Function HitungSubtotal(jumlahTiket As Integer) As Decimal
+        Return jumlahTiket * HARGA_TIKET
+    End Function
+
+    Function HitungDiskonPersen(jumlahTiket As Integer, isMember As Boolean) As Decimal
+        If jumlahTiket < 5 Then
+            Return 0D
+        ElseIf jumlahTiket >= 5 AndAlso isMember Then
+            Return 0.15D
+        Else
+            Return 0.1D
+        End If
+    End Function
+
+    Function HitungNilaiDiskon(subtotal As Decimal, diskonPersen As Decimal) As Decimal
+        Return subtotal * diskonPersen
+    End Function
+
+    Function HitungTotalBayar(subtotal As Decimal, nilaiDiskon As Decimal) As Decimal
+        Return subtotal - nilaiDiskon
+    End Function
+End Module
+```
+
+### 3. Kode Form Antarmuka (`Form1.vb`)
+```vb
+Public Class Form1
+    Sub btnHitung_Click(sender As Object, e As EventArgs) Handles btnHitung.Click
+        Dim jumlahTiket As Integer
+        Dim isMember As Boolean
+
+        If Not Integer.TryParse(txtJumlahTiket.Text, jumlahTiket) Then
+            MessageBox.Show("Masukkan jumlah tiket dalam bentuk angka")
+            txtJumlahTiket.Focus()
+            Return
+        End If
+
+        If jumlahTiket <= 0 Then
+            MessageBox.Show("Jumlah tiket harus lebih dari 0")
+            txtJumlahTiket.Focus()
+            Return
+        End If
+
+        isMember = chkMember.Checked
+
+        Dim subtotal As Decimal = ModTiket.HitungSubtotal(jumlahTiket)
+        Dim diskonPersen As Decimal = ModTiket.HitungDiskonPersen(jumlahTiket, isMember)
+        Dim nilaiDiskon As Decimal = ModTiket.HitungNilaiDiskon(subtotal, diskonPersen)
+        Dim totalBayar As Decimal = ModTiket.HitungTotalBayar(subtotal, nilaiDiskon)
+
+        txtSubtotal.Text = subtotal.ToString("N0")
+        txtPersenDiskon.Text = (diskonPersen * 100).ToString("0") & "%"
+        txtNilaiDiskon.Text = nilaiDiskon.ToString("N0")
+        txtTotalBayar.Text = totalBayar.ToString("N0")
+    End Sub
+
+    Sub btnReset_Click(sender As Object, e As EventArgs) Handles btnReset.Click
+        txtJumlahTiket.Clear()
+        chkMember.Checked = False
+        txtSubtotal.Clear()
+        txtPersenDiskon.Clear()
+        txtNilaiDiskon.Clear()
+        txtTotalBayar.Clear()
+    End Sub
+
+    Sub btnKeluar_Click(sender As Object, e As EventArgs) Handles btnKeluar.Click
+        Me.Close()
+    End Sub
+End Class
+```
 
 ---
 

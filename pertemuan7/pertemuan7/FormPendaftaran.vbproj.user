@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="Current">
+  <ItemGroup>
+    <Compile Update="FrmUtama.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="FrmUjiKonversi.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="FrmPendaftaran.vb">
+      <SubType>Form</SubType>
+    </Compile>
+  </ItemGroup>
+</Project>
